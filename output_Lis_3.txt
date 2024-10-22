@@ -1,0 +1,23 @@
+
+number of processes = 4
+matrix size = 256 x 256 (65536 nonzero entries)
+
+initial vector x      : all components set to 1
+precision             : double
+eigensolver           : Inverse
+convergence condition : ||lx-(B^-1)Ax||_2 <= 1.0e-08 * ||lx||_2
+matrix storage format : CSR
+shift                 : 1.608300e+04
+linear solver         : BiCG
+preconditioner        : none
+eigensolver status    : normal end
+
+Inverse: mode number          = 0
+Inverse: eigenvalue           = 1.608332e+04
+Inverse: number of iterations = 3
+Inverse: elapsed time         = 3.329833e-03 sec.
+Inverse:   preconditioner     = 8.709000e-06 sec.
+Inverse:     matrix creation  = 2.910000e-07 sec.
+Inverse:   linear solver      = 2.045999e-03 sec.
+Inverse: relative residual    = 9.916110e-11
+

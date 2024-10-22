@@ -1,0 +1,64 @@
+
+Loading image einstein.jpg ...
+Image einstein.jpg loaded: 341x256 pixels with 1 channels
+Image einstein.jpg has dimension: 341 rows x 256 cols = 87296 entries
+
+Computing AtA ... 
+AtA has dimension: 256 rows x 256 cols = 65536 entries
+AtA has euclidian norm: 16154
+
+Solving the eigenvalue problem AtA*x=lambda*x using Eigen ...
+The smallest eigenvalues of AtA is lambda_256 = 0.00405211
+The second largest eigenvalues of AtA is lambda_2 = 1394.69
+The largest eigenvalues of AtA is lambda_1 = 16083.3
+The ratio of convergence |lambda_2| / |lambda_1| is r = 0.0867163
+The two largest computed singular values of A are: sigma_1 = 126.82 and sigma_2 = 37.3455
+
+Exporting matrix AtA ...
+New dense matrix saved to ./AtA.mtx
+
+Computing the largest eigenvalue of AtA using Lis ...
+The results of the power method are written in output_Lis_1.txt
+The results of the power method with shift are written in output_Lis_2.txt
+The results of the inverse power method with shift are written in output_Lis_3.txt
+
+Performing a quick check about the power method with shift ...
+The ratio of convergence |lambda_2-mu| / |lambda_1-mu| is r_mu = 0.0454687
+
+Performing a quick check about the inverse power method with shift ...
+The ratio of convergence |lambda_2-mu2| / |lambda_1-mu2| is r_mu2 = 2.15017e-05
+
+Computing the Singular Value Decomposition of A ...
+Size of A     : 341 x 256
+Size of Thin U: 341 x 256
+Size of Thin S: 256 x 256
+Size of Thin V: 256 x 256
+Thin S has euclidian norm: 139.516
+
+Performing quick checks about the SVD ...
+1) The two largest computed singular values of A are: sigma_1 = 126.82 and sigma_2 = 37.3455
+2) Difference between A_SVD and A: 2.45636e-13
+
+Computing C1D1 the Truncated SVD of A for k1 = 40 ...
+Size of C1: 341 x 40
+Size of D1: 256 x 40
+Number of nonzero elements in matrix C1 is 13640 and in matrix D1 is 10240
+Size of C1D1: 341 x 256
+Difference between C1D1 and A: 17.1408
+
+Computing C2D2 the Truncated SVD of A for k2 = 80 ...
+Size of C2: 341 x 80
+Size of D2: 256 x 80
+Number of nonzero elements in matrix C2 is 27280 and in matrix D2 is 20480
+Size of C2D2: 341 x 256
+Difference between C2D2 and A: 10.3856
+
+Exporting matrices C1, D1, C2, D2 ...
+New dense matrix saved to ./C1.mtx
+New dense matrix saved to ./D1.mtx
+New dense matrix saved to ./C2.mtx
+New dense matrix saved to ./D2.mtx
+
+Exporting compressed images C1D1 and C2D2 ...
+New image saved to ./output_C1D1.png
+New image saved to ./output_C2D2.png

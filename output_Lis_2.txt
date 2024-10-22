@@ -1,0 +1,21 @@
+
+number of processes = 4
+matrix size = 256 x 256 (65536 nonzero entries)
+
+initial vector x      : all components set to 1
+precision             : double
+eigensolver           : Power
+convergence condition : ||lx-(B^-1)Ax||_2 <= 1.0e-08 * ||lx||_2
+matrix storage format : CSR
+shift                 : 6.950000e+02
+eigensolver status    : normal end
+
+Power: mode number          = 0
+Power: eigenvalue           = 1.608332e+04
+Power: number of iterations = 7
+Power: elapsed time         = 1.456041e-03 sec.
+Power:   preconditioner     = 0.000000e+00 sec.
+Power:     matrix creation  = 0.000000e+00 sec.
+Power:   linear solver      = 0.000000e+00 sec.
+Power: relative residual    = 7.633185e-10
+

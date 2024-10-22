@@ -1,230 +1,38 @@
 #include <Eigen/Dense>
 #include <iostream>
 #include <random>
+#include <cstdlib>
 #include <unsupported/Eigen/SparseExtra>
+#include <Eigen/SVD>
+#include <Eigen/Core>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
-/*****************************************************************************************************************/
-// More details and explanation are at this link: 
-/*****************************************************************************************************************/
+
 using namespace Eigen;
 typedef Eigen::Triplet<double> T;
 
-/******************This is the defined functions field like convolution, filter, export matrix, etc***********************/
-// 1: Definite the convolution function as matrix vector production by simulating the whole procedure step by step, return the sparsematrix mn*mn
-SparseMatrix<double, RowMajor> convolutionMatrix(const Matrix<double, Dynamic, Dynamic, RowMajor> &kernel, int height, int width)
+void outputImage(const MatrixXd &output_image_matrix, int height, int width, const std::string &path)
 {
-    const int kernel_size = kernel.rows();
-    const int m = height;
-    const int n = width;
-    const int mn = m * n;
-    SparseMatrix<double, RowMajor> A(mn, mn);
-
-    std::vector<T> hav2TripletList;
-    hav2TripletList.reserve(mn * kernel_size * kernel_size);
-    // do convolution from left to right and up to down with zero padding, index_Ai and index_Aj are row and column index
-    for (int i = 0; i < m; i++) // We have use zero padding, so m means horizontal steps
-    {
-        for (int j = 0; j < n; j++) // We have use zero padding, so n means vertical steps
-        {
-            int index_Ai = i * n + j; // row index of A
-            // ki, kj are respectively relative row index and column index of kernel, central point is (0,0)
-            for (int ki = -kernel_size / 2; ki <= kernel_size / 2; ki++)
-            {
-                for (int kj = -kernel_size / 2; kj <= kernel_size / 2; kj++) // Do interation within one kernel
-                {
-                    // ci: contribute to n(width) shift each time when there is a vertical moving for convolution or inside the kernel
-                    int ci = i + ki;
-                    // cj: contribute just 1 shift each time, when there is a horizontal moving for convilution or inside the kernel
-                    int cj = j + kj;
-                    if (ci >= 0 && ci < m && cj >= 0 && cj < n && kernel(ki + kernel_size / 2, kj + kernel_size / 2) != 0) // check if the kernel element itselfe is 0
-                    {
-                        int index_Aj = ci * n + cj;
-                        // push nonzero elements to list
-                        hav2TripletList.push_back(Triplet<double>(index_Ai, index_Aj, kernel(ki + kernel_size / 2, kj + kernel_size / 2)));
-                    }
-                }
-            }
-        }
-    }
-    // get the sparsematrix from tripletlist
-    A.setFromTriplets(hav2TripletList.begin(), hav2TripletList.end());
-    return A;
-}
-
-// 2: An alternative definition for kernels H 3 by 3 to realize the convolution, easy to generalize
-SparseMatrix<double, RowMajor> convolutionMatrix2(const Matrix<double, Dynamic, Dynamic, RowMajor> &kernel, int m, int n)
-{
-    const int mn = m * n;
-    SparseMatrix<double, RowMajor> A(mn, mn);
-    std::vector<T> tripletList;
-    tripletList.reserve(mn * 9);
-    for (int i = 0; i < mn; ++i)
-    {
-        // top center (not first n rows)
-        if (i - n + 1 > 0 && kernel(0, 1) != 0)
-            tripletList.push_back(T(i, i - n, kernel(0, 1)));
-        // middle center (always)
-        if (kernel(1, 1) != 0)
-            tripletList.push_back(T(i, i, kernel(1, 1)));
-        // bottom center (not last n rows)
-        if (i + n - 1 < mn - 1 && kernel(2, 1) != 0)
-            tripletList.push_back(T(i, i + n, kernel(2, 1)));
-
-        if (i % n != 0) // we can go left
-        {
-            // top left
-            if (i - n > 0 && kernel(0, 0) != 0)
-                tripletList.push_back(T(i, i - n - 1, kernel(0, 0)));
-            // middle left
-            if (i > 0 && kernel(1, 0) != 0)
-                tripletList.push_back(T(i, i - 1, kernel(1, 0)));
-            // bottom left
-            if (i + n - 2 < mn - 1 && kernel(2, 0) != 0)
-                tripletList.push_back(T(i, i + n - 1, kernel(2, 0)));
-        }
-
-        if ((i + 1) % n != 0) // we can go right
-        {
-            // top right
-            if (i - n + 2 > 0 && kernel(0, 2) != 0)
-                tripletList.push_back(T(i, i - n + 1, kernel(0, 2)));
-            // middle right
-            if (i < mn - 1 && kernel(1, 2) != 0)
-                tripletList.push_back(T(i, i + 1, kernel(1, 2)));
-            // bottom right
-            if (i + n < mn - 1 && kernel(2, 2) != 0)
-                tripletList.push_back(T(i, i + n + 1, kernel(2, 2)));
-        }
-    }
-    A.setFromTriplets(tripletList.begin(), tripletList.end());
-    return A;
-}
-
-// Define the function that convert a vector to a Matrix<unsigned char> type and output it to image.png
-void outputVectorImage(const VectorXd &vectorData, int height, int width, const std::string &path)
-{
-    Matrix<double, Dynamic, Dynamic, RowMajor> output_image_matrix(height, width);
-    for (int i = 0; i < height; i++)
-    {
-        for (int j = 0; j < width; j++)
-        {
-            output_image_matrix(i, j) = vectorData(i * width + j);
-        }
-    }
-
-    // Convert the modified image to grayscale and export it using stbi_write_png
+    // Convert the modified image to grayscale and export it using stbi_write_png, just need this stb-related to be RowMajor
     Matrix<unsigned char, Dynamic, Dynamic, RowMajor> new_image_output = output_image_matrix.unaryExpr(
-        [](double pixel)
-        {
-            return static_cast<unsigned char>(std::max(0.0, std::min(255.0, pixel * 255))); // ensure range [0,255]
-        });
+        [](double pixel) { return static_cast<unsigned char>(std::max(0.0, std::min(255.0, pixel * 255))); // ensure range [0,255]
+    });
     if (stbi_write_png(path.c_str(), width, height, 1, new_image_output.data(), width) == 0)
     {
         std::cerr << "Error: Could not save modified image" << std::endl;
     }
-    std::cout << "New image saved to " << path << "\n"
-              << std::endl;
+    std::cout << "New image saved to " << path << std::endl;
 }
 
-// Export the vector, save it to mtx file. And the index from 1 instead of 0 for meeting the lis input file demand.
-void exportVector(VectorXd data, const std::string &path)
-{
-    FILE *out = fopen(path.c_str(), "w");
-    fprintf(out, "%%%%MatrixMarket vector coordinate real general\n");
-    fprintf(out, "%d\n", data.size());
-    for (int i = 0; i < data.size(); i++)
-    {
-        fprintf(out, "%d %f\n", i + 1, data(i)); // Attention! here index is from 1, same as lis demand.
-    }
-    std::cout << "New vector file saved to " << path << std::endl;
-    fclose(out);
-}
-
-// Export a sparse matrix by saveMarket()
-void exportSparsematrix(SparseMatrix<double, RowMajor> data, const std::string &path)
-{
-    if (saveMarket(data, path))
-    {
-        std::cout << "New sparse matrix saved to " << path << std::endl;
-    }
-    else
-    {
-        std::cerr << "Error: Could not save sparse matrix to " << path << std::endl;
-    }
-}
-
-// Check if a matrix is symmetric by tolerance 1e-10
-bool isSymmetric(SparseMatrix<double, RowMajor> &matrix, const std::string &matrixName)
-{
-    double tolerance = 1e-10;
-    double norm_diff = (matrix - SparseMatrix<double, RowMajor>(matrix.transpose())).norm();
-    std::cout << matrixName << "\trow: " << matrix.rows() << "\tcolumns: " << matrix.cols() << std::endl;
-    std::cout << "\nCheck if " << matrixName << " is symmetric by norm value of its difference with transpose: "
-              << norm_diff << " ..." << std::endl;
-    return norm_diff < tolerance;
-}
-
-// Function to check if a matrix is positive definite by cholesky
-bool isPositiveDefinite(const SparseMatrix<double, RowMajor> &matrix, const std::string &matrixName)
-{
-    std::cout << "Check if " << matrixName << " is positive definite ... " << std::endl;
-    Eigen::SimplicialLLT<SparseMatrix<double, RowMajor>> cholesky(matrix);
-    return cholesky.info() == Success;
-}
-
-// 1. Lis generated mtx file is marketvector format, but loadMarkerVector() method doesn't match (it needs MatrixMarket matrix array fromat);
-// 2. So we use our own menthod to read data from mtx file here, we read each line of the file and put it value into our Eigen::VectorXd data.
-// Function to read a vector from a Matrix Market file from lis with 1-based indexing
-VectorXd readMarketVector(const std::string &filename)
-{
-    std::ifstream file(filename);
-    if (!file.is_open())
-    {
-        std::cerr << "Error opening file: " << filename << std::endl;
-        return VectorXd();
-    }
-
-    std::string line;
-    // Skip the header lines
-    std::getline(file, line); // %%MatrixMarket vector coordinate real general
-    std::getline(file, line); // Dimensions or size of the vector
-
-    int size;
-    std::istringstream iss(line);
-    if (!(iss >> size))
-    {
-        std::cerr << "Error reading size from file: " << filename << std::endl;
-        return VectorXd();
-    }
-
-    VectorXd vectorX(size);
-
-    // Read the vector data line by line, data index staring from 1
-    while (std::getline(file, line))
-    {
-        std::istringstream iss(line);
-        int index;
-        double value;
-        if (!(iss >> index >> value))
-        {
-            std::cerr << "Error reading value from file: " << filename << std::endl;
-            return VectorXd();
-        }
-        // Convert 1-based to 0-based indexing here, because our VectorXd type stores data from 0
-        vectorX(index - 1) = value;
-    }
-
-    file.close();
-    return vectorX;
-}
-/*--------------------------------------------------------------------------------------------------------------*/
-/*-------------------------------------------------Main()-------------------------------------------------------*/
 int main(int argc, char *argv[])
 {
+    /*******************************************************************************************************************************
+                                                          Einstein Part
+    *******************************************************************************************************************************/
+
     if (argc < 2)
     {
         std::cerr << "Usage: " << argv[0] << " <image_path>" << std::endl;
@@ -233,7 +41,7 @@ int main(int argc, char *argv[])
 
     const char *input_image_path = argv[1];
 
-    /*****************************Load the image by using stb_image****************************/
+    /**************************************** Load the image by using stb_image ***************************************/
     std::cout << "\nLoading image " << argv[1] << " ..." << std::endl;
     int width, height, channels;
     // for greyscale images force to load only one channel
@@ -246,10 +54,8 @@ int main(int argc, char *argv[])
 
     std::cout << "Image " << argv[1] << " loaded: " << height << "x" << width << " pixels with " << channels << " channels" << std::endl;
 
-    /*************Convert the image_data to MatrixXd form, each element value is normalized to [0,1]*************/
-    // We use RowMajor notation!
+    /************* Convert the image_data to MatrixXd form, each element value is normalized to [0,1] *************/
     Matrix<double, Dynamic, Dynamic, RowMajor> A(height, width);
-
     for (int i = 0; i < height; i++)
     {
         for (int j = 0; j < width; j++)
@@ -258,49 +64,141 @@ int main(int argc, char *argv[])
             A(i, j) = static_cast<double>(image_data[index]) / 255; // we use the value range from 0 to 1
         }
     }
-
     // Report the size of the matrix
     std::cout << "Image " << argv[1] << " has dimension: " << A.rows() << " rows x " << A.cols()
-              << " cols = " << A.size() << " entries" << "\n"
-              << std::endl;
+              << " cols = " << A.size() << " entries" << "\n" << std::endl;
 
-    /*************************************Compute AtA and its euclidian norm*******************************************/
+    /************************************* Compute AtA and its euclidian norm *******************************************/
     std::cout << "Computing AtA ... " << std::endl;
     Matrix<double, Dynamic, Dynamic, RowMajor> AtA = A.transpose() * A;
     std::cout << "AtA has dimension: " << AtA.rows() << " rows x " << AtA.cols() << " cols = " << AtA.size() << " entries" << std::endl;
     std::cout << "AtA has euclidian norm: " << AtA.norm() << "\n" << std::endl;
 
-    /*****************************Solve the eigenvalue problem AtA*x=lambda*x using Eigen***********************************/
+    /***************************** Solve the eigenvalue problem AtA*x=lambda*x using Eigen ***********************************/
     std::cout << "Solving the eigenvalue problem AtA*x=lambda*x using Eigen ..." << std::endl;
     SelfAdjointEigenSolver<MatrixXd> eigensolver(AtA);
     if (eigensolver.info() != Eigen::Success) abort();
-    std::cout << "The smallest eigenvalues of AtA is: " << eigensolver.eigenvalues()[0] << std::endl;
-    std::cout << "The second largest eigenvalues of AtA is: " << eigensolver.eigenvalues()[width-2] << std::endl;
-    std::cout << "The largest eigenvalues of AtA is: " << eigensolver.eigenvalues()[width-1] << std::endl;
+    double lambda_256 = eigensolver.eigenvalues()[0];
+    double lambda_2 = eigensolver.eigenvalues()[width-2];
+    double lambda_1 = eigensolver.eigenvalues()[width-1];
+    double r = lambda_2 / lambda_1;
+
+    std::cout << "The smallest eigenvalues of AtA is lambda_256 = " << lambda_256 << std::endl;
+    std::cout << "The second largest eigenvalues of AtA is lambda_2 = " << lambda_2 << std::endl;
+    std::cout << "The largest eigenvalues of AtA is lambda_1 = " << lambda_1 << std::endl;
+    std::cout << "The ratio of convergence |lambda_2| / |lambda_1| is r = " << r << std::endl;
     // Define the vector of singular values of A as the square root of the eigenvalues of AtA
     VectorXd sigmaA = eigensolver.eigenvalues().cwiseSqrt();
-    std::cout << "The two largest computed singular values of A are: sigma1 = " 
-              << sigmaA(width-1) << " and sigma2 = "
+    std::cout << "The two largest computed singular values of A are: sigma_1 = " 
+              << sigmaA(width-1) << " and sigma_2 = "
               << sigmaA(width-2) << "\n" << std::endl;
 
-    /**********************************************Export matrix AtA****************************************************/
-    std::cout << "Exporting AtA ... " << std::endl;
+    /********************************************** Export matrix AtA ****************************************************/
+    std::cout << "Exporting matrix AtA ..." << std::endl;
     std::string matrixFileOut("./AtA.mtx");
     saveMarket(AtA, matrixFileOut);
     std::cout << "New dense matrix saved to " << matrixFileOut << "\n" << std::endl;
 
-    /***********************************Solve the eigenvalue problem AtA*x=lambda*x using Eigen***********************************/
-
-    /* The commands are:
+    /*********************************** Solve the eigenvalue problem AtA*x=lambda*x using Lis ***********************************/
+    std::cout << "Computing the largest eigenvalue of AtA using Lis ..." << std::endl;
+    std::cout << "The results of the power method are written in output_Lis_1.txt" << std::endl;
+    std::cout << "The results of the power method with shift are written in output_Lis_2.txt" << std::endl;
+    std::cout << "The results of the inverse power method with shift are written in output_Lis_3.txt" << std::endl;
+    /* 
+    The Lis terminal commands are:
         mpicc -DUSE_MPI -I${mkLisInc} -L${mkLisLib} -llis etest1.c -o eigen1
-        mpirun -n 4 ./eigen1 Ata.mtx eigvec.mtm hist.txt -e pi -emaxiter 100 -etol 1.e-8 -shift 660 > output_Lis_1.txt
+        mpirun -n 4 ./eigen1 Ata.mtx eigvec1.mtm hist1.txt -e pi -emaxiter 100 -etol 1.e-8 > output_Lis_1.txt
+        mpirun -n 4 ./eigen1 Ata.mtx eigvec2.mtm hist2.txt -e pi -emaxiter 100 -etol 1.e-8 -shift 695 > output_Lis_2.txt
+        mpirun -n 4 ./eigen1 Ata.mtx eigvec3.mtm hist3.txt -e ii -emaxiter 100 -etol 1.e-8 -shift 16083 > output_Lis_3.txt
     */
 
+   // The following part is very subtle, therefore I advise you to read the Readme.md file
+    std::cout << "\nPerforming a quick check about the power method with shift ..." << std::endl;
+    double mu = 695;
+    MatrixXd Id = MatrixXd::Identity(width,width);
+    MatrixXd AtA_mu = AtA - mu * Id;
+    SelfAdjointEigenSolver<MatrixXd> eigensolver2(AtA_mu);
+    if (eigensolver2.info() != Eigen::Success) abort();
+    std::cout << "The ratio of convergence |lambda_2-mu| / |lambda_1-mu| is r_mu = " 
+              << eigensolver2.eigenvalues()[width-2] / eigensolver2.eigenvalues()[width-1] << std::endl;
 
+    std::cout << "\nPerforming a quick check about the inverse power method with shift ..." << std::endl;
+    double mu2 = 16083;
+    MatrixXd AtA_mu2 = AtA - mu2 * Id;
+    SelfAdjointEigenSolver<MatrixXd> eigensolver3(AtA_mu2);
+    if (eigensolver3.info() != Eigen::Success) abort();
+    std::cout << "The ratio of convergence |lambda_2-mu2| / |lambda_1-mu2| is r_mu2 = " 
+              << eigensolver3.eigenvalues()[width-1] / abs(eigensolver3.eigenvalues()[width-2]) << std::endl;
+
+    /*********************************** Compute the SVD of A ***********************************/
+    std::cout << "\nComputing the Singular Value Decomposition of A ..." << std::endl;
+    Eigen::BDCSVD<Eigen::MatrixXd> svd (A, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    MatrixXd U = svd.matrixU(), V = svd.matrixV(), S = svd.singularValues().asDiagonal();
+    VectorXd W = svd.singularValues();
+    std::cout << "Size of A     : " << A.rows() << " x " << A.cols() << std::endl;
+    std::cout << "Size of Thin U: " << U.rows() << " x " << U.cols() << std::endl;
+    std::cout << "Size of Thin S: " << S.rows() << " x " << S.cols() << std::endl;
+    std::cout << "Size of Thin V: " << V.rows() << " x " << V.cols() << std::endl;
+    std::cout << "Thin S has euclidian norm: " << S.norm() << std::endl;
+
+    std::cout << "\nPerforming quick checks about the SVD ..." << std::endl;
+    std::cout << "1) The two largest computed singular values of A are: sigma_1 = " 
+              << W(0) << " and sigma_2 = " << W(1) << std::endl;
+    MatrixXd Asvd = U * S * V.transpose();
+    std::cout << "2) Difference between A_SVD and A: " << (Asvd-A).norm() << std::endl;
+    /*
+    Eigen::BDCSVD<Eigen::MatrixXd> svd2 (A, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    MatrixXd Uf = svd.matrixU(), Vf = svd.matrixV();
+    std::cout << "3) Size of Full U: " << Uf.rows() << " x " << Uf.cols() << std::endl;
+    std::cout << "   Size of Full V: " << Vf.rows() << " x " << Vf.cols() << std::endl;
+    */
+
+    /*********************************** Compute the truncated SVD of A ***********************************/
+    std::cout << "\nComputing C1D1 the Truncated SVD of A for k1 = 40 ..." << std::endl;
+    int k1 = 40, k2 = 80;
+    MatrixXd C1 = U.leftCols(k1), D1 = V.leftCols(k1) * S.topLeftCorner(k1,k1);
+    std::cout << "Size of C1: " << C1.rows() << " x " << C1.cols() << std::endl;
+    std::cout << "Size of D1: " << D1.rows() << " x " << D1.cols() << std::endl;
+    std::cout << "Number of nonzero elements in matrix C1 is " << C1.nonZeros() 
+              << " and in matrix D1 is " << D1.nonZeros() << std::endl;
+    MatrixXd C1D1 = C1 * D1.transpose();
+    std::cout << "Size of C1D1: " << C1D1.rows() << " x " << C1D1.cols() << std::endl;
+    std::cout << "Difference between C1D1 and A: " << (C1D1-A).norm() << std::endl;
+
+    std::cout << "\nComputing C2D2 the Truncated SVD of A for k2 = 80 ..." << std::endl; 
+    MatrixXd C2 = U.leftCols(k2), D2 = V.leftCols(k2) * S.topLeftCorner(k2,k2);
+    std::cout << "Size of C2: " << C2.rows() << " x " << C2.cols() << std::endl;
+    std::cout << "Size of D2: " << D2.rows() << " x " << D2.cols() << std::endl;
+    std::cout << "Number of nonzero elements in matrix C2 is " << C2.nonZeros() 
+              << " and in matrix D2 is " << D2.nonZeros() << std::endl;
+    MatrixXd C2D2 = C2 * D2.transpose();
+    std::cout << "Size of C2D2: " << C2D2.rows() << " x " << C2D2.cols() << std::endl;
+    std::cout << "Difference between C2D2 and A: " << (C2D2-A).norm() << std::endl;
+
+    /********************************************** Export matrices C1, D1, C2, D2 ****************************************************/
+    std::cout << "\nExporting matrices C1, D1, C2, D2 ..." << std::endl;
+    std::string matrixFileOut2("./C1.mtx");
+    saveMarket(C1, matrixFileOut2);
+    std::cout << "New dense matrix saved to " << matrixFileOut2 << std::endl;
+    std::string matrixFileOut3("./D1.mtx");
+    saveMarket(D1, matrixFileOut3);
+    std::cout << "New dense matrix saved to " << matrixFileOut3 << std::endl;
+    std::string matrixFileOut4("./C2.mtx");
+    saveMarket(C2, matrixFileOut4);
+    std::cout << "New dense matrix saved to " << matrixFileOut4 << std::endl;
+    std::string matrixFileOut5("./D2.mtx");
+    saveMarket(D2, matrixFileOut5);
+    std::cout << "New dense matrix saved to " << matrixFileOut5 << std::endl;
+
+    /***************************************** Export compressed images C1D1 and C2D2 ***********************************************/
+    std::cout << "\nExporting compressed images C1D1 and C2D2 ..." << std::endl;
+    outputImage(C1D1, C1D1.rows(), C1D1.cols(), "./output_C1D1.png");
+    outputImage(C2D2, C2D2.rows(), C2D2.cols(), "./output_C2D2.png");
+
+    /*******************************************************************************************************************************
+                                                          Checkerboard Part
+    *******************************************************************************************************************************/
     
-
-
-
     // Free memory
     stbi_image_free(image_data);
 
