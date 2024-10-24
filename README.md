@@ -13,7 +13,7 @@ The description of the challenge is [here](Challenge2_description.pdf). We reall
   ./exec einstein.jpg > output.txt
   ```
 
-- To solve the eigenproblem $A^T\!A\; \mathbf{x}=\lambda\; \mathbf{x}$ on terminal using the power method available on Lis (Library of Iterative Solvers for linear systems):
+- To solve the eigenproblem $A^TA\; \mathbf{x}=\lambda\; \mathbf{x}$ on terminal using the power method available on Lis (Library of Iterative Solvers for linear systems):
 
   ```bash
   mpicc -DUSE_MPI -I${mkLisInc} -L${mkLisLib} -llis etest1.c -o eigen1
