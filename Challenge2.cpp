@@ -266,7 +266,7 @@ int main(int argc, char *argv[])
     std::cout << "New dense matrix saved to " << matrixFileOut7 << "\n" << std::endl;
 
     /******************************** Compute the SVD of the noised checkerboard matrix **************************************/
-    std::cout << "Computing the SVD (addressed as svd 2) of noised checkerboard matrix ..." << std::endl;
+    std::cout << "Computing the SVD (addressed as SVD2) of noised checkerboard matrix ..." << std::endl;
     Eigen::BDCSVD<Eigen::MatrixXd> svd2 (noised_checkerboard, Eigen::ComputeThinU | Eigen::ComputeThinV);
     MatrixXd U2 = svd2.matrixU(), V2 = svd2.matrixV(), S2 = svd2.singularValues().asDiagonal();
     VectorXd W2 = svd2.singularValues();
