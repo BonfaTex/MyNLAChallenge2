@@ -62,3 +62,56 @@ New dense matrix saved to ./D2.mtx
 Exporting compressed images C1D1 and C2D2 ...
 New image saved to ./output_C1D1.png
 New image saved to ./output_C2D2.png
+
+Creating a checkerboard ...
+Size of the checkerboard: 200 x 200
+Size of each block: 25 x 25
+The starting top left block is black.
+The checkerboard has euclidian norm: 141.421
+New image saved to ./output_checkerboard.png
+
+Exporting checkerboard matrix ...
+New dense matrix saved to ./checkerboard.mtx
+
+Adding noise to the checkerboard matrix ...
+New image saved to ./output_checkerboard_noised.png
+Difference between noised_checkerboard and checkerboard: 16.0318
+
+Exporting noised checkerboard matrix ...
+New dense matrix saved to ./checkerboard_noised.mtx
+
+Computing the SVD (addressed as svd 2) of noised checkerboard matrix ...
+Size of noised checkerboard matrix: 200 x 200
+Size of Thin U2                   : 200 x 200
+Size of Thin S2                   : 200 x 200
+Size of Thin V2                   : 200 x 200
+Thin S2 has euclidian norm        : 135.314
+The two largest computed singular values of noised checkerboard matrix are: sigma_1 = 100.029 and sigma_2 = 90.2528
+
+Performing a quick check about the SVD2 ...
+Difference between A_SVD2 and noised checkerboard matrix: 8.45993e-13
+Difference between A_SVD2 and checkerboard matrix       : 16.0318
+
+Computing C3D3 the Truncated SVD of noised checkerboard matrix for k3 = 5 ...
+Size of C3: 200 x 5
+Size of D3: 200 x 5
+Size of C1D1: 341 x 256
+Difference between C3D3 and noised checkerboard matrix: 12.2355
+Difference between C3D3 and checkerboard matrix       : 10.3593
+
+Computing C4D4 the Truncated SVD of noised checkerboard matrix for k4 = 10 ...
+Size of C4: 200 x 10
+Size of D4: 200 x 10
+Size of C4D4: 200 x 200
+Difference between C4D4 and noised checkerboard matrix: 11.6807
+Difference between C4D4 and checkerboard matrix       : 10.981
+
+Exporting matrices C3, D3, C4, D4 ...
+New dense matrix saved to ./C3.mtx
+New dense matrix saved to ./D3.mtx
+New dense matrix saved to ./C4.mtx
+New dense matrix saved to ./D4.mtx
+
+Exporting compressed images C3D3 and C4D4 ...
+New image saved to ./output_C3D3.png
+New image saved to ./output_C4D4.png

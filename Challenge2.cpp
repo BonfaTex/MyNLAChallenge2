@@ -22,9 +22,47 @@ void outputImage(const MatrixXd &output_image_matrix, int height, int width, con
     });
     if (stbi_write_png(path.c_str(), width, height, 1, new_image_output.data(), width) == 0)
     {
-        std::cerr << "Error: Could not save modified image" << std::endl;
+        std::cerr << "Error: Could not save new image to " << path << std::endl;
     }
     std::cout << "New image saved to " << path << std::endl;
+}
+
+MatrixXd create_checkerboard(int board_size, int blocks_size)
+{
+    int num_blocks = board_size / blocks_size;
+    MatrixXd board(board_size, board_size);
+    for (int i = 0; i < num_blocks; i++)
+    {
+        for (int j = 0; j < num_blocks; j++)
+        {
+            double color = ((i + j) % 2 == 0) ? 0.0 : 1.0;
+            for (int bi = 0; bi < blocks_size; bi++)
+            {
+                for (int bj = 0; bj < blocks_size; bj++)
+                {
+                    board(i * blocks_size + bi, j * blocks_size + bj) = color;
+                }
+            }
+        }
+    }
+    return board;
+}
+
+MatrixXd noise_the_image(MatrixXd original_matrix, int a, int b)
+{
+    Matrix<double, Dynamic, Dynamic, RowMajor> noised_matrix(original_matrix.rows(), original_matrix.cols());
+    std::default_random_engine generator;
+    std::uniform_int_distribution<int> distribution(a, b);
+    for (int i = 0; i < original_matrix.rows(); i++)
+    {
+        for (int j = 0; j < original_matrix.cols(); j++)
+        {
+            int noise = distribution(generator);
+            double noisedData = original_matrix(i, j) + static_cast<double>(noise) / 255;
+            noised_matrix(i, j) = std::max(0.0, std::min(1.0, noisedData));
+        }
+    }
+    return noised_matrix;
 }
 
 int main(int argc, char *argv[])
@@ -147,7 +185,7 @@ int main(int argc, char *argv[])
     MatrixXd Asvd = U * S * V.transpose();
     std::cout << "2) Difference between A_SVD and A: " << (Asvd-A).norm() << std::endl;
     /*
-    Eigen::BDCSVD<Eigen::MatrixXd> svd2 (A, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    Eigen::BDCSVD<Eigen::MatrixXd> svdFull (A, Eigen::ComputeFullU | Eigen::ComputeFullV);
     MatrixXd Uf = svd.matrixU(), Vf = svd.matrixV();
     std::cout << "3) Size of Full U: " << Uf.rows() << " x " << Uf.cols() << std::endl;
     std::cout << "   Size of Full V: " << Vf.rows() << " x " << Vf.cols() << std::endl;
@@ -199,6 +237,94 @@ int main(int argc, char *argv[])
                                                           Checkerboard Part
     *******************************************************************************************************************************/
     
+    std::cout << "\nCreating a checkerboard ..." << std::endl;
+    int board_size = 200;
+    int blocks_size = 25;
+    std::cout << "Size of the checkerboard: " << board_size << " x " << board_size << std::endl;
+    std::cout << "Size of each block: " << blocks_size << " x " << blocks_size << std::endl;
+    std::cout << "The starting top left block is black." << std::endl;
+    MatrixXd checkerboard = create_checkerboard(board_size, blocks_size);
+    std::cout << "The checkerboard has euclidian norm: " << checkerboard.norm() << std::endl;
+    outputImage(checkerboard, board_size, board_size, "./output_checkerboard.png");
+
+    /********************************************** Export checkerboard matrix ****************************************************/
+    std::cout << "\nExporting checkerboard matrix ..." << std::endl;
+    std::string matrixFileOut6("./checkerboard.mtx");
+    saveMarket(checkerboard, matrixFileOut6);
+    std::cout << "New dense matrix saved to " << matrixFileOut6 << "\n" << std::endl;
+
+    /***************************************** Add noise to the checkerboard matrix ***********************************************/
+    std::cout << "Adding noise to the checkerboard matrix ..." << std::endl;
+    MatrixXd noised_checkerboard = noise_the_image(checkerboard, -50, 50);
+    outputImage(noised_checkerboard, board_size, board_size, "./output_checkerboard_noised.png");
+    std::cout << "Difference between noised_checkerboard and checkerboard: " << (noised_checkerboard-checkerboard).norm() << std::endl;
+
+    /******************************************** Export noised checkerboard matrix **************************************************/
+    std::cout << "\nExporting noised checkerboard matrix ..." << std::endl;
+    std::string matrixFileOut7("./checkerboard_noised.mtx");
+    saveMarket(noised_checkerboard, matrixFileOut7);
+    std::cout << "New dense matrix saved to " << matrixFileOut7 << "\n" << std::endl;
+
+    /******************************** Compute the SVD of the noised checkerboard matrix **************************************/
+    std::cout << "Computing the SVD (addressed as svd 2) of noised checkerboard matrix ..." << std::endl;
+    Eigen::BDCSVD<Eigen::MatrixXd> svd2 (noised_checkerboard, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    MatrixXd U2 = svd2.matrixU(), V2 = svd2.matrixV(), S2 = svd2.singularValues().asDiagonal();
+    VectorXd W2 = svd2.singularValues();
+    std::cout << "Size of noised checkerboard matrix: " << noised_checkerboard.rows() << " x " << noised_checkerboard.cols() << std::endl;
+    std::cout << "Size of Thin U2                   : " << U2.rows() << " x " << U2.cols() << std::endl;
+    std::cout << "Size of Thin S2                   : " << S2.rows() << " x " << S2.cols() << std::endl;
+    std::cout << "Size of Thin V2                   : " << V2.rows() << " x " << V2.cols() << std::endl;
+    std::cout << "Thin S2 has euclidian norm        : " << S2.norm() << std::endl;
+    std::cout << "The two largest computed singular values of noised checkerboard matrix are: sigma_1 = " 
+              << W2(0) << " and sigma_2 = " << W2(1) << std::endl;
+
+    std::cout << "\nPerforming a quick check about the SVD2 ..." << std::endl;
+    MatrixXd Asvd2 = U2 * S2 * V2.transpose();
+    std::cout << "Difference between A_SVD2 and noised checkerboard matrix: " << (Asvd2-noised_checkerboard).norm() << std::endl;
+    std::cout << "Difference between A_SVD2 and checkerboard matrix       : " << (Asvd2-checkerboard).norm() << std::endl;
+
+    /*********************************** Compute the truncated SVD of noised checkerboard matrix ***********************************/
+    std::cout << "\nComputing C3D3 the Truncated SVD of noised checkerboard matrix for k3 = 5 ..." << std::endl;
+    int k3 = 5, k4 = 10;
+    MatrixXd C3 = U2.leftCols(k3), D3 = V2.leftCols(k3) * S2.topLeftCorner(k3,k3);
+    std::cout << "Size of C3: " << C3.rows() << " x " << C3.cols() << std::endl;
+    std::cout << "Size of D3: " << D3.rows() << " x " << D3.cols() << std::endl;
+    MatrixXd C3D3 = C3 * D3.transpose();
+    std::cout << "Size of C1D1: " << C1D1.rows() << " x " << C1D1.cols() << std::endl;
+    std::cout << "Difference between C3D3 and noised checkerboard matrix: " << (C3D3-noised_checkerboard).norm() << std::endl;
+    std::cout << "Difference between C3D3 and checkerboard matrix       : " << (C3D3-checkerboard).norm() << std::endl;
+
+    std::cout << "\nComputing C4D4 the Truncated SVD of noised checkerboard matrix for k4 = 10 ..." << std::endl; 
+    MatrixXd C4 = U2.leftCols(k4), D4 = V2.leftCols(k4) * S2.topLeftCorner(k4,k4);
+    std::cout << "Size of C4: " << C4.rows() << " x " << C4.cols() << std::endl;
+    std::cout << "Size of D4: " << D4.rows() << " x " << D4.cols() << std::endl;
+    MatrixXd C4D4 = C4 * D4.transpose();
+    std::cout << "Size of C4D4: " << C4D4.rows() << " x " << C4D4.cols() << std::endl;
+    std::cout << "Difference between C4D4 and noised checkerboard matrix: " << (C4D4-noised_checkerboard).norm() << std::endl;
+    std::cout << "Difference between C4D4 and checkerboard matrix       : " << (C4D4-checkerboard).norm() << std::endl;
+
+    /********************************************** Export matrices C3, D3, C4, D4 ****************************************************/
+    std::cout << "\nExporting matrices C3, D3, C4, D4 ..." << std::endl;
+    std::string matrixFileOut8("./C3.mtx");
+    saveMarket(C3, matrixFileOut8);
+    std::cout << "New dense matrix saved to " << matrixFileOut8 << std::endl;
+    std::string matrixFileOut9("./D3.mtx");
+    saveMarket(D3, matrixFileOut9);
+    std::cout << "New dense matrix saved to " << matrixFileOut9 << std::endl;
+    std::string matrixFileOut10("./C4.mtx");
+    saveMarket(C4, matrixFileOut10);
+    std::cout << "New dense matrix saved to " << matrixFileOut10 << std::endl;
+    std::string matrixFileOut11("./D4.mtx");
+    saveMarket(D4, matrixFileOut11);
+    std::cout << "New dense matrix saved to " << matrixFileOut11 << std::endl;
+
+    /***************************************** Export compressed images C3D3 and C4D4 ***********************************************/
+    std::cout << "\nExporting compressed images C3D3 and C4D4 ..." << std::endl;
+    outputImage(C3D3, C3D3.rows(), C3D3.cols(), "./output_C3D3.png");
+    outputImage(C4D4, C4D4.rows(), C4D4.cols(), "./output_C4D4.png");
+
+    /********************************************************* end ***************************************************************/
+
     // Free memory
     stbi_image_free(image_data);
 
