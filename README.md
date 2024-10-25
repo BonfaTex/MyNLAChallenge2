@@ -20,15 +20,13 @@ The description of the challenge is [here](Challenge2_description.pdf). We reall
   mpirun -n 4 ./eigen1 Ata.mtx eigvec1.mtm hist1.txt -e pi -emaxiter 100 -etol 1.e-8 > output_Lis_1.txt
   ```
 
-  The rate of convergence is $r=\dfrac{\left| \lambda_2 \right|}{\left| \lambda_1 \right|}$, where $\left| \lambda_1 \right|> \left| \lambda_2 \right|> \dots > \left| \lambda_{256} \right|$ are the eigenvalues of $A^TA$. In this particular case, we have:
-  $$
-  r=\frac{\left| \lambda_2 \right|}{\left| \lambda_1 \right|}=\frac{1394.69}{16083.3}=0.0867163\qquad \leadsto \qquad 8\text{ iterations}
-  $$
+  The rate of convergence is $r=\left| \lambda_2 \right|/\left| \lambda_1 \right|$, where $\left| \lambda_1 \right|> \left| \lambda_2 \right|> \dots > \left| \lambda_{256} \right|$ are the eigenvalues of $A^TA$. In this particular case, we have:
+  
+  $$r=\frac{\left| \lambda_2 \right|}{\left| \lambda_1 \right|}=\frac{1394.69}{16083.3}=0.0867163\qquad \leadsto \qquad 8\text{ iterations}$$
 
   To accelerate the convergence you could apply a shift $\mu$ to the system. The new eigenproblem is $\left(A^TA-\mu I_d \right)\mathbf{x}=\lambda \mathbf{x}$, and with $\mu=695$ we get the following rate of convegence:
-  $$
-  r_\mu=\frac{\left| \lambda_2-\mu \right|}{\left| \lambda_1-\mu \right|}=\frac{1394.69-695}{16083.3-695}=0.0454687\qquad \leadsto \qquad 7\text{ iterations}
-  $$
+    
+  $$r_\mu=\frac{\left| \lambda_2-\mu \right|}{\left| \lambda_1-\mu \right|}=\frac{1394.69-695}{16083.3-695}=0.0454687\qquad \leadsto \qquad 7\text{ iterations} $$
 
   The command is:
 
@@ -37,9 +35,8 @@ The description of the challenge is [here](Challenge2_description.pdf). We reall
   ```
 
   In addiction, you can speed up the convergence thanks to the inverse power method with shift. This implies to applying the power method with matrix $\left(A^TA-\mu_2 I_d \right)^{-1}$. Since the eigenvalues of the previous matrix are the inverse of the eigenvalues of $\left(A^TA-\mu_2 I_d \right)$, then the rate of convergence for a shift $\mu_2=16083$ in this case is:
-  $$
-  r_{\mu_2}=\frac{\left| \lambda_1-\mu_2 \right|}{\left| \lambda_2-\mu_2 \right|}=\frac{16083.3-16083}{\left|1394.69-16083\right|}=2.15017\cdot 10^{-5}\qquad \leadsto \qquad 3\text{ iterations}
-  $$
+  
+  $$r_{\mu_2}=\frac{\left| \lambda_1-\mu_2 \right|}{\left| \lambda_2-\mu_2 \right|}=\frac{16083.3-16083}{\left|1394.69-16083\right|}=2.15017\cdot 10^{-5}\qquad \leadsto \qquad 3\text{ iterations} $$
 
   The command is:
 
@@ -73,7 +70,7 @@ The detailed output results are shown in files below:
 
 ### 4. Final Comment
 
-The compresed image `C4D4` for $k=10$ approximates better the noised checkerboard than the compressed `C3D3` for $k=5$, as one would expect from a SVD decomposition: as $k$ grows, the compressed image becomes similar to the noised one. 
+The compresed image `C4D4` for $k=10$ approximates better the noised checkerboard than the compressed `C3D3` for $k=5$, as one would expect from a SVD decomposition. As $k$ grows, the compressed image becomes similar to the noised one:
 
 ![Comment1](comparison1.png)
 
