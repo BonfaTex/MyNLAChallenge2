@@ -117,17 +117,19 @@ int main(int argc, char *argv[])
     SelfAdjointEigenSolver<MatrixXd> eigensolver(AtA);
     if (eigensolver.info() != Eigen::Success) abort();
     double lambda_256 = eigensolver.eigenvalues()[0];
+    double lambda_255 = eigensolver.eigenvalues()[1];
     double lambda_2 = eigensolver.eigenvalues()[width-2];
     double lambda_1 = eigensolver.eigenvalues()[width-1];
     double r = lambda_2 / lambda_1;
 
-    std::cout << "The smallest eigenvalues of AtA is lambda_256 = " << lambda_256 << std::endl;
-    std::cout << "The second largest eigenvalues of AtA is lambda_2 = " << lambda_2 << std::endl;
-    std::cout << "The largest eigenvalues of AtA is lambda_1 = " << lambda_1 << std::endl;
-    std::cout << "The ratio of convergence |lambda_2| / |lambda_1| is r = " << r << std::endl;
+    std::cout << "The smallest eigenvalues of AtA is                 : lambda_256 = " << lambda_256 << std::endl;
+    std::cout << "The second smallest eigenvalues of AtA is          : lambda_255 = " << lambda_255 << std::endl;
+    std::cout << "The second largest eigenvalues of AtA is           : lambda_2 = " << lambda_2 << std::endl;
+    std::cout << "The largest eigenvalues of AtA is                  : lambda_1 = " << lambda_1 << std::endl;
+    std::cout << "The ratio of convergence |lambda_2| / |lambda_1| is: r = " << r << std::endl;
     // Define the vector of singular values of A as the square root of the eigenvalues of AtA
     VectorXd sigmaA = eigensolver.eigenvalues().cwiseSqrt();
-    std::cout << "The two largest computed singular values of A are: sigma_1 = " 
+    std::cout << "The two largest computed singular values of A are  : sigma_1 = " 
               << sigmaA(width-1) << " and sigma_2 = "
               << sigmaA(width-2) << "\n" << std::endl;
 
@@ -287,8 +289,8 @@ int main(int argc, char *argv[])
     std::cout << "\nComputing C3D3 the Truncated SVD of noised checkerboard matrix for k3 = 5 ..." << std::endl;
     int k3 = 5, k4 = 10;
     MatrixXd C3 = U2.leftCols(k3), D3 = V2.leftCols(k3) * S2.topLeftCorner(k3,k3);
-    std::cout << "Size of C3: " << C3.rows() << " x " << C3.cols() << std::endl;
-    std::cout << "Size of D3: " << D3.rows() << " x " << D3.cols() << std::endl;
+    std::cout << "Size of C3  : " << C3.rows() << " x " << C3.cols() << std::endl;
+    std::cout << "Size of D3  : " << D3.rows() << " x " << D3.cols() << std::endl;
     MatrixXd C3D3 = C3 * D3.transpose();
     std::cout << "Size of C1D1: " << C1D1.rows() << " x " << C1D1.cols() << std::endl;
     std::cout << "Difference between C3D3 and noised checkerboard matrix: " << (C3D3-noised_checkerboard).norm() << std::endl;
@@ -296,8 +298,8 @@ int main(int argc, char *argv[])
 
     std::cout << "\nComputing C4D4 the Truncated SVD of noised checkerboard matrix for k4 = 10 ..." << std::endl; 
     MatrixXd C4 = U2.leftCols(k4), D4 = V2.leftCols(k4) * S2.topLeftCorner(k4,k4);
-    std::cout << "Size of C4: " << C4.rows() << " x " << C4.cols() << std::endl;
-    std::cout << "Size of D4: " << D4.rows() << " x " << D4.cols() << std::endl;
+    std::cout << "Size of C4  : " << C4.rows() << " x " << C4.cols() << std::endl;
+    std::cout << "Size of D4  : " << D4.rows() << " x " << D4.cols() << std::endl;
     MatrixXd C4D4 = C4 * D4.transpose();
     std::cout << "Size of C4D4: " << C4D4.rows() << " x " << C4D4.cols() << std::endl;
     std::cout << "Difference between C4D4 and noised checkerboard matrix: " << (C4D4-noised_checkerboard).norm() << std::endl;

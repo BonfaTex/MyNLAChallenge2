@@ -8,11 +8,12 @@ AtA has dimension: 256 rows x 256 cols = 65536 entries
 AtA has euclidian norm: 16154
 
 Solving the eigenvalue problem AtA*x=lambda*x using Eigen ...
-The smallest eigenvalues of AtA is lambda_256 = 0.00405211
-The second largest eigenvalues of AtA is lambda_2 = 1394.69
-The largest eigenvalues of AtA is lambda_1 = 16083.3
-The ratio of convergence |lambda_2| / |lambda_1| is r = 0.0867163
-The two largest computed singular values of A are: sigma_1 = 126.82 and sigma_2 = 37.3455
+The smallest eigenvalues of AtA is                 : lambda_256 = 0.00405211
+The second smallest eigenvalues of AtA is          : lambda_255 = 0.00509647
+The second largest eigenvalues of AtA is           : lambda_2 = 1394.69
+The largest eigenvalues of AtA is                  : lambda_1 = 16083.3
+The ratio of convergence |lambda_2| / |lambda_1| is: r = 0.0867163
+The two largest computed singular values of A are  : sigma_1 = 126.82 and sigma_2 = 37.3455
 
 Exporting matrix AtA ...
 New dense matrix saved to ./AtA.mtx
@@ -93,15 +94,15 @@ Difference between A_SVD2 and noised checkerboard matrix: 8.45993e-13
 Difference between A_SVD2 and checkerboard matrix       : 16.0318
 
 Computing C3D3 the Truncated SVD of noised checkerboard matrix for k3 = 5 ...
-Size of C3: 200 x 5
-Size of D3: 200 x 5
+Size of C3  : 200 x 5
+Size of D3  : 200 x 5
 Size of C1D1: 341 x 256
 Difference between C3D3 and noised checkerboard matrix: 12.2355
 Difference between C3D3 and checkerboard matrix       : 10.3593
 
 Computing C4D4 the Truncated SVD of noised checkerboard matrix for k4 = 10 ...
-Size of C4: 200 x 10
-Size of D4: 200 x 10
+Size of C4  : 200 x 10
+Size of D4  : 200 x 10
 Size of C4D4: 200 x 200
 Difference between C4D4 and noised checkerboard matrix: 11.6807
 Difference between C4D4 and checkerboard matrix       : 10.981
