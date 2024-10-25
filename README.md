@@ -17,7 +17,7 @@ The description of the challenge is [here](Challenge2_description.pdf). We reall
 
   ```bash
   mpicc -DUSE_MPI -I${mkLisInc} -L${mkLisLib} -llis etest1.c -o eigen1
-  mpirun -n 4 ./eigen1 Ata.mtx eigvec1.mtm hist1.txt -e pi -emaxiter 100 -etol 1.e-8 > output_Lis_1.txt
+  mpirun -n 4 ./eigen1 Ata.mtx eigvec1.mtx hist1.txt -e pi -emaxiter 100 -etol 1.e-8 > output_Lis_1.txt
   ```
 
   The rate of convergence is $r=\left| \lambda_2 \right|/\left| \lambda_1 \right|$, where $\left| \lambda_1 \right|> \left| \lambda_2 \right|> \dots > \left| \lambda_{256} \right|$ are the eigenvalues of $A^TA$. In this particular case, we have:
@@ -31,7 +31,7 @@ The description of the challenge is [here](Challenge2_description.pdf). We reall
   The command is:
 
   ```bash
-  mpirun -n 4 ./eigen1 Ata.mtx eigvec2.mtm hist2.txt -e pi -emaxiter 100 -etol 1.e-8 -shift 695 > output_Lis_2.txt
+  mpirun -n 4 ./eigen1 Ata.mtx eigvec2.mtx hist2.txt -e pi -emaxiter 100 -etol 1.e-8 -shift 695 > output_Lis_2.txt
   ```
 
   In addiction, you can speed up the convergence thanks to the inverse power method with shift. This implies to applying the power method with matrix $\left(A^TA-\mu_2 I_d \right)^{-1}$. Since the eigenvalues of the previous matrix are the inverse of the eigenvalues of $\left(A^TA-\mu_2 I_d \right)$, then the rate of convergence for a shift $\mu_2=16083$ in this case is:
@@ -41,7 +41,7 @@ The description of the challenge is [here](Challenge2_description.pdf). We reall
   The command is:
 
   ```bash
-  mpirun -n 4 ./eigen1 Ata.mtx eigvec3.mtm hist3.txt -e ii -emaxiter 100 -etol 1.e-8 -shift 16083 > output_Lis_3.txt
+  mpirun -n 4 ./eigen1 Ata.mtx eigvec3.mtx hist3.txt -e ii -emaxiter 100 -etol 1.e-8 -shift 16083 > output_Lis_3.txt
   ```
 
 ---
