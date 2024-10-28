@@ -70,7 +70,7 @@ The detailed output results are shown in files below:
 
 ### 4. Final Comment
 
-The compresed image `C4D4` for $k=10$ approximates better the noised checkerboard than the compressed `C3D3` for $k=5$, as one would expect from a SVD decomposition. As $k$ grows, the compressed image becomes similar to the noised one:
+The compressed image `C4D4` for $k=10$ approximates better the noised checkerboard than the compressed `C3D3` for $k=5$, as one would expect from a SVD decomposition. As $k$ grows, the compressed image becomes similar to the noised one:
 
 ![Comment1](comparison1.png)
 
